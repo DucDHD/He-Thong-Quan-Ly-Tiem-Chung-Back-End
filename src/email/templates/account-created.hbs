@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Thông báo tạo tài khoản</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body
+    style="margin: 0; padding: 0; min-width: 100%; font-family: Arial, sans-serif; font-size: 16px; line-height: 1.5; background-color: #FAFAFA; color: #222222;">
+
+    <div style="max-width: 600px; margin: 0 auto;">
+
+        <!-- Header -->
+        <div style="background-color: #0070f3; padding: 24px; color: #ffffff;">
+            <h1
+                style="font-size: 24px; font-weight: 700; line-height: 1.25; margin-top: 0; margin-bottom: 0; text-align: center;">
+                HỆ THỐNG QUẢN LÝ TIÊM CHỦNG
+            </h1>
+        </div>
+
+        <!-- Content -->
+        <div style="padding: 24px; background-color: #ffffff;">
+
+            <p style="margin-top: 0; margin-bottom: 24px;">
+                Xin chào <strong>{{fullname}}</strong>,
+            </p>
+
+            <p style="margin-top: 0; margin-bottom: 24px;">
+                Tài khoản của bạn đã được quản trị viên tạo thành công.
+                Bạn có thể sử dụng thông tin dưới đây để đăng nhập vào hệ thống.
+            </p>
+
+            <!-- Account Information -->
+            <div
+                style="background-color: #f6f6f6; padding: 20px; border-radius: 6px; margin-bottom: 24px;">
+
+                <p style="margin-top: 0; margin-bottom: 12px;">
+                    <strong>Email:</strong>
+                    {{email}}
+                </p>
+
+                <p style="margin-top: 0; margin-bottom: 12px;">
+                    <strong>password:</strong>
+                    {{password}}
+                </p>
+
+                <p style="margin-top: 0; margin-bottom: 0;">
+                    <strong>Vai trò:</strong>
+                    {{role.role_name}}
+                </p>
+
+            </div>
+
+            <p style="margin-top: 0; margin-bottom: 24px;">
+                Vì lý do bảo mật, vui lòng đổi mật khẩu sau lần đăng nhập đầu tiên.
+            </p>
+
+            <p style="margin-top: 0; margin-bottom: 0;">
+                Nếu bạn không nhận ra tài khoản này hoặc cần hỗ trợ,
+                vui lòng liên hệ với quản trị viên.
+            </p>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="background-color: #f6f6f6; padding: 24px;">
+
+            <p style="margin-top: 0; margin-bottom: 8px;">
+                Trân trọng,
+            </p>
+
+            <p style="margin-top: 0; margin-bottom: 0;">
+                <strong>Hệ thống Quản lý Tiêm chủng</strong>
+            </p>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
