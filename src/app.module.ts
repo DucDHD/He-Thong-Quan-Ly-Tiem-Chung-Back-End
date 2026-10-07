@@ -6,6 +6,10 @@ import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { UsersModule } from './modules/users/users.module'
 import { AuthModule } from './auth/auth.module'
+import { VaccinesModule } from './modules/vaccines/vaccines.module'
+import { VaccinationSchedulesModule } from './modules/vaccination-registration/vaccination-registrations.module'
+import { VaccinationBookingsModule } from './modules/vaccination-bookings/vaccination-bookings.module'
+import { InvoiceModule } from './modules/invoice/invoice.module'
 
 @Module({
   imports: [
@@ -14,7 +18,11 @@ import { AuthModule } from './auth/auth.module'
     }),
     TypeOrmModule.forRootAsync(databaseConfig),
     UsersModule,
-    AuthModule
+    AuthModule,
+    VaccinesModule,
+    VaccinationSchedulesModule,
+    VaccinationBookingsModule,
+    InvoiceModule
   ],
   controllers: [AppController],
   providers: [AppService]
