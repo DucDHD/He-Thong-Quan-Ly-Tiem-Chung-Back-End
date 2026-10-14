@@ -30,7 +30,7 @@ export class VaccinationSchedule {
   @Column({ type: 'int', nullable: true })
   location_id: number | null
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ type: 'nvarchar', length: 'max', nullable: true })
   note: string | null
 
   @Column({ type: 'nvarchar', length: 20, default: VaccinationScheduleStatus.UPCOMING })

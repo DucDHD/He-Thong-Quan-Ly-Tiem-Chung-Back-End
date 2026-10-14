@@ -25,6 +25,10 @@ export class InvoiceService {
 
     const savedInvoice = await this.invoiceRepository.save(invoice)
 
+    invoice.invoice_code = `HD${String(invoice.invoice_id).padStart(6, '0')}`
+
+    await this.invoiceRepository.save(invoice)
+
     // Tạo chi tiết hóa đơn
     const invoiceDetail = this.invoiceDetailRepository.create({
       invoice_id: savedInvoice.invoice_id,

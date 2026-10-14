@@ -11,6 +11,9 @@ export class Invoice {
   @PrimaryGeneratedColumn()
   invoice_id: number
 
+  @Column({ type: 'varchar', length: 8, nullable: true})
+  invoice_code: string | null
+
   @Column({ type: 'int', unique: true })
   booking_id: number
 

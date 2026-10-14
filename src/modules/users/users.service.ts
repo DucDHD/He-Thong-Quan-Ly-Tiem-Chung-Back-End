@@ -241,4 +241,15 @@ export class UsersService {
     return { message: isActive ? 'Kích hoạt tài khoản thành công': 'Ngừng hoạt động tài khoản thành công', isActive }
   }
 
+  async getCustomer(): Promise<User[]> {
+    return this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.role', 'role')
+      .where('role.role_code = :role', {
+        role: UserRole.PATIENT
+      })
+      .orderBy('user.user_id', 'DESC')
+      .getMany()
+  }
+
 }

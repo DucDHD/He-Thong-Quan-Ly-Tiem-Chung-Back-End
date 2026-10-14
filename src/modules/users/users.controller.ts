@@ -31,6 +31,12 @@ export class UsersController {
     return this.usersService.getUsers()
   }
 
+  @Roles(UserRole.ADMIN, UserRole.DOCTOR)
+  @Get('customer')
+  async getCustomer() {
+    return this.usersService.getCustomer()
+  }
+
   @Roles(UserRole.ADMIN)
   @Get(':id')
   getUserById(@Param('id', ParseIntPipe) id: number) {

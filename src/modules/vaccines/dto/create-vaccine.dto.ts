@@ -62,6 +62,5 @@ export class CreateVaccineDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(500, { message: 'Mô tả không được vượt quá 500 ký tự' })
   description?: string
 }

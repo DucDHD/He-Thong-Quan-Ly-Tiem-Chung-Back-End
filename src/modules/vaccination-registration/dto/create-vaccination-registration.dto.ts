@@ -28,7 +28,6 @@ export class CreateVaccinationScheduleDto {
   location_id: number;
 
   @IsOptional()
-  @IsString({ message: 'Ghi chú không hợp lệ' })
-  @MaxLength(500, { message: 'Ghi chú không được vượt quá 500 ký tự' })
+  @IsString()
   note?: string
 }

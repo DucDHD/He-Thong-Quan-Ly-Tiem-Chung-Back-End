@@ -1,4 +1,4 @@
-import { Injectable, Logger, ConflictException, NotFoundException  } from '@nestjs/common'
+import { Injectable, Logger, ConflictException, NotFoundException, BadRequestException  } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository, Not } from 'typeorm'
 import { successLog } from '@/helpers/logger.helper'
@@ -8,6 +8,8 @@ import { VaccinationSchedule, VaccinationScheduleStatus } from './entities/vacci
 import { UserRole } from '@/common/user-role'
 import { User } from '@/modules/users/entities/user.entity'
 import { VaccinationLocation } from './entities/vaccination-location.entity'
+import { VaccinationStock } from '@/modules/inventory/entities/vaccination-stock.entity'
+import { VaccinationBookingsService } from '../vaccination-bookings/vaccination-bookings.service'
 
 
 @Injectable()
@@ -23,7 +25,12 @@ private readonly logger = new Logger(VaccinationSchedulesService.name)
     private readonly userRepository: Repository<User>,
 
     @InjectRepository(VaccinationSchedule)
-    private readonly vaccinationScheduleRepository: Repository<VaccinationSchedule>
+    private readonly vaccinationScheduleRepository: Repository<VaccinationSchedule>,
+
+    @InjectRepository(VaccinationStock)
+    private readonly vaccinationStockRepository: Repository<VaccinationStock>,
+
+    private readonly vaccinationBookingsService: VaccinationBookingsService
     ) {}
 
   async create(dto: CreateVaccinationScheduleDto) {
@@ -41,6 +48,12 @@ private readonly logger = new Logger(VaccinationSchedulesService.name)
 
     if (existingSchedule) { 
         throw new ConflictException({ field: 'vaccine_id', message: 'Vaccine này đã có lịch tiêm vào thời gian đã chọn' })
+    }
+
+    const stock = await this.vaccinationBookingsService.getAvailableVaccineStock(dto.vaccine_id)
+
+    if (!stock) {
+        throw new BadRequestException({ field: 'stock_quantity', message: 'Vaccine chưa có trong kho, đã hết số lượng hoặc hết hạn' })
     }
 
     const schedule = this.vaccinationScheduleRepository.create({
@@ -148,9 +161,19 @@ private readonly logger = new Logger(VaccinationSchedulesService.name)
             throw new NotFoundException('Không tìm thấy lịch tiêm')
         }
 
+       
+
         const vaccinationDate = dto.vaccination_date ? new Date(dto.vaccination_date) : schedule.vaccination_date
 
         const vaccineId = dto.vaccine_id ?? schedule.vaccine_id
+
+        if (vaccineId !== schedule.vaccine_id) {
+            const stock = await this.vaccinationBookingsService.getAvailableVaccineStock(vaccineId)
+
+            if (!stock) {
+                throw new BadRequestException({  field: 'stock_quantity', message: 'Vaccine chưa có trong kho, đã hết số lượng hoặc hết hạn' })
+            }
+        }
 
         const existingSchedule = await this.vaccinationScheduleRepository.findOne({
             where: {

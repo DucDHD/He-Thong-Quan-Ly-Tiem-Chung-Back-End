@@ -6,17 +6,21 @@ import { VaccinationBookingsController } from './vaccination-bookings.controller
 import { VaccinationBookingsService } from './vaccination-bookings.service'
 import { InvoiceModule } from '../invoice/invoice.module'
 import { VaccinationRecord } from './entities/vaccination-record.entity'
+import { VaccinationStock } from '@/modules/inventory/entities/vaccination-stock.entity'
+
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       VaccinationBooking,
-       VaccinationSchedule,
-       VaccinationRecord
+      VaccinationSchedule,
+      VaccinationRecord,
+      VaccinationStock
       ]),
     InvoiceModule
   ],
   controllers: [VaccinationBookingsController],
-  providers: [VaccinationBookingsService]
+  providers: [VaccinationBookingsService],
+  exports: [VaccinationBookingsService]
 })
 export class VaccinationBookingsModule {}

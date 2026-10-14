@@ -10,6 +10,7 @@ import { VaccinesModule } from './modules/vaccines/vaccines.module'
 import { VaccinationSchedulesModule } from './modules/vaccination-registration/vaccination-registrations.module'
 import { VaccinationBookingsModule } from './modules/vaccination-bookings/vaccination-bookings.module'
 import { InvoiceModule } from './modules/invoice/invoice.module'
+import { InventoryModule } from './modules/inventory/inventory.module'
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { InvoiceModule } from './modules/invoice/invoice.module'
     VaccinesModule,
     VaccinationSchedulesModule,
     VaccinationBookingsModule,
-    InvoiceModule
+    InvoiceModule,
+    InventoryModule
   ],
   controllers: [AppController],
   providers: [AppService]

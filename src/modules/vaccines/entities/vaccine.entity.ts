@@ -41,7 +41,7 @@ export class Vaccine {
   @Column({ type: 'decimal', precision: 18, scale: 2, nullable: true })
   price: number | null
 
-  @Column({ type: 'nvarchar', length: 500, nullable: true })
+  @Column({ type: 'nvarchar', length: 'MAX', nullable: true })
   description: string | null
 
   @Column({ type: 'bit', default: true })

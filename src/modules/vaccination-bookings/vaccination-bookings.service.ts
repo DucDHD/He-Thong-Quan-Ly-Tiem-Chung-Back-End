@@ -6,6 +6,7 @@ import { VaccinationSchedule } from '../vaccination-registration/entities/vaccin
 import { CreateVaccinationBookingDto } from './dto/create-vaccination-booking.dto'
 import { InvoiceService } from '../invoice/invoice.service'
 import { VaccinationRecord } from './entities/vaccination-record.entity'
+import { VaccinationStock } from '@/modules/inventory/entities/vaccination-stock.entity'
 
 @Injectable()
 export class VaccinationBookingsService {
@@ -18,7 +19,11 @@ export class VaccinationBookingsService {
     private readonly invoiceService: InvoiceService,
 
     @InjectRepository(VaccinationSchedule)
-    private readonly vaccinationScheduleRepository: Repository<VaccinationSchedule>
+    private readonly vaccinationScheduleRepository: Repository<VaccinationSchedule>,
+
+    @InjectRepository(VaccinationStock)
+    private readonly vaccinationStockRepository: Repository<VaccinationStock>,
+
   ) {}
 
   async create(dto: CreateVaccinationBookingDto) {
@@ -66,70 +71,73 @@ export class VaccinationBookingsService {
     return await this.vaccinationBookingRepository.save(booking)
   }
 
-  async getDetail(scheduleId: number) {
-    return await this.vaccinationBookingRepository
-      .createQueryBuilder('booking')
-      .leftJoin(
-        'vaccination_schedules',
-        'schedule',
-        'schedule.schedule_id = booking.schedule_id'
-      )
-      .leftJoin(
-        'vaccines',
-        'vaccine',
-        'vaccine.vaccine_id = schedule.vaccine_id'
-      )
-      .leftJoin(
-        'users',
-        'user',
-        'user.user_id = booking.user_id'
-      )
-      .leftJoin(
-        'vaccination_locations',
-        'location',
-        'location.location_id = schedule.location_id'
-      )
-      .select([
-        // BOOKING
-        'booking.booking_id AS booking_id',
-        'booking.schedule_id AS schedule_id',
-        'booking.user_id AS user_id',
-        'booking.note AS note',
-        'booking.status AS status',
-        'booking.created_at AS created_at',
 
-        // LỊCH TIÊM
-        'schedule.vaccination_date AS vaccination_date',
-        'schedule.capacity AS capacity',
-        'schedule.age AS age',
+async getDetail(scheduleId: number) {
+  return await this.vaccinationBookingRepository
+    .createQueryBuilder('booking')
+    .innerJoin(
+      'vaccination_schedules',
+      'schedule',
+      'schedule.schedule_id = booking.schedule_id'
+    )
+    .leftJoin(
+      'vaccines',
+      'vaccine',
+      'vaccine.vaccine_id = schedule.vaccine_id'
+    )
+    .leftJoin(
+      'vaccination_locations',
+      'location',
+      'location.location_id = schedule.location_id'
+    )
+    .leftJoin(
+      'users',
+      'user',
+      'user.user_id = booking.user_id'
+    )
+    .select([
+      // BOOKING
+      'booking.booking_id AS booking_id',
+      'schedule.schedule_id AS schedule_id',
+      'booking.user_id AS user_id',
+      'booking.note AS note',
+      'booking.status AS status',
+      'booking.created_at AS created_at',
 
-        // VACCINE
-        'vaccine.vaccine_name AS vaccine_name',
-        'vaccine.price AS price',
+      // LỊCH TIÊM
+      'schedule.vaccination_date AS vaccination_date',
+      'schedule.capacity AS capacity',
+      'schedule.age AS age',
 
-        // ĐỊA ĐIỂM TIÊM
-        'schedule.location_id AS location_id',
-        'location.location_name AS location_name',
-        'location.address AS location_address',
+      // VACCINE
+      'vaccine.vaccine_name AS vaccine_name',
+      'vaccine.price AS price',
 
-        // NGƯỜI ĐĂNG KÝ
-        'user.fullName AS fullName',
-        'user.phone AS phone',
-        'user.dateOfBirth AS dateOfBirth',
-        'user.gender AS gender',
-        'user.cccd AS cccd',
-        'user.address AS address'
-      ])
-      .where('booking.schedule_id = :scheduleId', { scheduleId })
-      .andWhere('booking.status IN (:...statuses)', {
-        statuses: [
-          VaccinationBookingStatus.REGISTERED,
-          VaccinationBookingStatus.COMPLETED
-        ]
-      })
-      .orderBy('booking.created_at', 'ASC')
-      .getRawMany()
-  }
+      // ĐỊA ĐIỂM TIÊM
+      'schedule.location_id AS location_id',
+      'location.location_name AS location_name',
+      'location.address AS location_address',
+
+      // NGƯỜI ĐĂNG KÝ
+      'user.fullName AS fullName',
+      'user.phone AS phone',
+      'user.dateOfBirth AS dateOfBirth',
+      'user.gender AS gender',
+      'user.cccd AS cccd',
+      'user.address AS address'
+    ])
+    .where('booking.schedule_id = :scheduleId', {
+      scheduleId
+    })
+    .andWhere('booking.status IN (:...statuses)', {
+      statuses: [
+        VaccinationBookingStatus.REGISTERED,
+        VaccinationBookingStatus.COMPLETED
+      ]
+    })
+    .orderBy('booking.created_at', 'ASC')
+    .getRawMany()
+}
 
 
   async cancel(id: number) {
@@ -153,19 +161,7 @@ export class VaccinationBookingsService {
     }
   }
 
- async completeBooking(booking_id: number) {
-    const booking = await this.vaccinationBookingRepository.findOne({
-      where: { booking_id }
-    })
-
-    if (!booking) {
-      throw new NotFoundException('Không tìm thấy lịch đăng ký')
-    }
-
-    if (booking.status === VaccinationBookingStatus.COMPLETED) {
-      throw new BadRequestException('Lịch tiêm này đã hoàn thành')
-    }
-
+  async getVaccineByScheduleId(schedule_id: number) {
     const vaccine = await this.vaccinationScheduleRepository
       .createQueryBuilder('schedule')
       .leftJoin(
@@ -178,13 +174,83 @@ export class VaccinationBookingsService {
         'vaccine.price AS price'
       ])
       .where('schedule.schedule_id = :scheduleId', {
-        scheduleId: booking.schedule_id
+        scheduleId: schedule_id
       })
       .getRawOne<{ vaccine_id: number; price: string }>()
 
     if (!vaccine) {
       throw new NotFoundException('Không tìm thấy vaccine')
     }
+
+    return vaccine
+  }
+
+
+  async getAvailableVaccineStock(vaccine_id: number) {
+    return await this.vaccinationStockRepository
+      .createQueryBuilder('stock')
+      .where('stock.vaccine_id = :vaccineId', {
+        vaccineId: vaccine_id
+      })
+      .andWhere('stock.quantity > 0')
+      .andWhere('stock.expiry_date >= CAST(GETDATE() AS DATE)')
+      .orderBy('stock.expiry_date', 'ASC')
+      .addOrderBy('stock.stock_id', 'ASC')
+      .getOne()
+  }
+
+  private async decreaseVaccineStock(stock_id: number) {
+    const result = await this.vaccinationStockRepository
+      .createQueryBuilder()
+      .update(VaccinationStock)
+      .set({
+        quantity: () => 'quantity - 1'
+      })
+      .where('stock_id = :stockId', { stockId: stock_id })
+      .andWhere('quantity > 0')
+      .andWhere('expiry_date >= CAST(GETDATE() AS DATE)')
+      .execute()
+
+    return result
+  }
+
+
+ async completeBooking(booking_id: number) {
+    console.log('booking_id:', booking_id)
+    const booking = await this.vaccinationBookingRepository.findOne({
+      where: { booking_id }
+    })
+
+    console.log('booking:', booking)
+
+    if (!booking) {
+      throw new NotFoundException('Không tìm thấy lịch đăng ký')
+    }
+
+    if (booking.status === VaccinationBookingStatus.COMPLETED) {
+      throw new BadRequestException('Lịch tiêm này đã hoàn thành')
+    }
+
+
+    const vaccine = await this.getVaccineByScheduleId(booking.schedule_id)
+
+    if (!vaccine) {
+      throw new NotFoundException('Không tìm thấy vaccine')
+    }
+
+    const stockExists = await this.vaccinationStockRepository.findOne({
+      where: {  vaccine_id: Number(vaccine.vaccine_id)}
+    })
+
+    if (!stockExists) {
+      throw new BadRequestException('Vaccine này hiện chưa có trong kho')
+    }
+
+    const stock = await this.getAvailableVaccineStock(  Number(vaccine.vaccine_id) )
+      if (!stock) {
+        throw new BadRequestException( 'Vaccine đã hết hàng hoặc không còn trong kho' )
+      }
+
 
     const schedule = await this.vaccinationScheduleRepository.findOne({
       where: { schedule_id: booking.schedule_id }
@@ -212,6 +278,13 @@ export class VaccinationBookingsService {
       vaccination_date: new Date()
     })
 
+    const result = await this.decreaseVaccineStock(stock.stock_id)
+    
+    if (result.affected !== 1) {
+      throw new BadRequestException('Vaccine đã hết số lượng hoặc hết hạn')
+    }
+
+
     // Hoàn thành booking
     booking.status = VaccinationBookingStatus.COMPLETED
 
@@ -227,6 +300,8 @@ export class VaccinationBookingsService {
       vaccine_id: Number(vaccine.vaccine_id),
       total_amount: Number(vaccine.price)
     })
+
+    
 
     return booking
   }
